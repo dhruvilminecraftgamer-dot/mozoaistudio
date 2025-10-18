@@ -1,10 +1,72 @@
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Mozo AI Studio</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mozo AI Studio</title>
+<style>
+:root {
+    /* Dark Theme (Default) */
+    --background-color: #1a1a1a; --sidebar-background: #202123; --column-background: #2b2b2b;
+    --header-footer-background: #252525; --text-color: #e0e0e0; --border-color: #444;
+    --accent-color: #4A90E2; --accent-color-hover: #357ABD; --input-background: #3c3c3c;
+    --message-user-background: #004d99; --message-ai-background: #3e3e3e; --error-color: #ff4d4d;
+    --sidebar-width: 260px;
+}
+html[data-theme='light'] {
+    /* Light Theme Overrides */
+    --background-color: #f0f2f5; --sidebar-background: #ffffff; --column-background: #f7f7f8;
+    --header-footer-background: #ffffff; --text-color: #1d1d1f; --border-color: #e1e1e1;
+    --input-background: #ffffff; --message-user-background: #007aff; --message-ai-background: #e9e9eb;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin:0; height:100vh; display:flex; background-color: var(--background-color); color: var(--text-color); overflow:hidden; transition: background-color 0.3s, color 0.3s; }
+#app-wrapper { display:flex; width:100%; height:100%; }
+#sidebar { width:var(--sidebar-width); background-color: var(--sidebar-background); display:flex; flex-direction:column; padding:10px; border-right:1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; }
+.new-chat-button, .delete-history-button, .footer-buttons button, .settings-btn { cursor:pointer; border:none; border-radius:5px; padding:10px; background-color: var(--accent-color); color:white; margin-bottom:10px; width: 100%; }
+/* REVISED: Deep Think button style */
+#deep-think-mode-btn { cursor:pointer; border:none; border-radius:5px; padding:10px; background-color: var(--accent-color); color:white; margin-bottom:10px; width: auto; /* Not full width */ }
+.delete-history-button { background-color:#c0392b; }
+.settings-btn { background-color: #555; }
+#content-wrapper { flex-grow:1; display:flex; flex-direction:column; overflow:hidden; }
+main { flex-grow:1; overflow-y:auto; background-color: var(--column-background); display:flex; flex-direction:column; gap:10px; padding: 10px; transition: background-color 0.3s; }
+footer { background-color: var(--header-footer-background); padding:10px; z-index:10; border-top:1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; }
+#sidebar header { text-align: center; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; transition: border-color 0.3s; }
+#sidebar header h1 { margin: 0; font-size: 1.3em; }
+#sidebar-footer { margin-top: auto; }
+.message { padding:10px 15px; border-radius:18px; max-width:80%; word-wrap:break-word; line-height: 1.6; }
+.message p { margin: 0; }
+.user-message { background-color: var(--message-user-background); color: white; align-self:flex-end; }
+.ai-message { background-color: var(--message-ai-background); align-self:flex-start; }
+html[data-theme='light'] .ai-message { color: #1d1d1f; }
+#prompt-wrapper { display:flex; gap:10px; }
+#prompt-input { flex-grow:1; padding:10px; border-radius:5px; border:1px solid var(--border-color); background-color: var(--input-background); color: var(--text-color); transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+@media(max-width:768px){#sidebar{position:fixed;transform:translateX(-100%);transition:0.3s}#sidebar.open{transform:translateX(0)}}
+#footer-top { display: flex; justify-content: flex-start; margin-bottom: 10px; }
+.chat-history-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s, border-color 0.3s; }
+.chat-history-card:hover { background-color: rgba(0,0,0,0.1); }
+html[data-theme='dark'] .chat-history-card:hover { background-color: #3a3a3a; }
+.chat-history-card.active { border-left: 3px solid var(--accent-color); }
+.chat-options-btn { background: none; border: none; color: var(--text-color); cursor: pointer; font-size: 1.2em; }
+
+/* REVISED: Pop-up Menu styles for better positioning and appearance */
+.popup-menu { display: none; position: fixed; background-color: var(--sidebar-background); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; z-index: 1001; box-shadow: 0 4px 12px rgba(0,0,0,0.2); min-width: 150px; }
+.popup-menu button, .popup-menu div { background: none; border: none; color: var(--text-color); padding: 8px 12px; width: 100%; text-align: left; cursor: pointer; border-radius: 4px; display: block; }
+.popup-menu button:hover { background-color: var(--accent-color); color: white; }
+#model-version-popup { cursor: default; }
+#model-version-popup strong { color: var(--accent-color); }
+
+.thinking-message { text-align: center; padding: 10px; color: #aaa; }
+@keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 10px 10px rgba(74, 144, 226, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 144, 226, 0); } }
+.deep-think-animation { animation: pulse 0.5s; }
+.code-block { margin: 10px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+.code-header { display: flex; justify-content: space-between; align-items: center; background-color: #0e0e0e; padding: 5px 10px; }
+.code-header-lang { font-size: 0.9em; font-weight: bold; text-transform: uppercase; color: #ccc; }
+.code-header-buttons button { background-color: #333; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 5px; font-size: 0.8em; }
+.code-header-buttons button:hover { background-color: #555; }
+.code-content { background-color: #000; padding: 10px; overflow-x: auto; max-height: 400px; }
+.code-content pre, .code-content code { margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; color: #f0f0f0; }
+.code-preview-iframe { width: 100%; height: 300px; border: none; border-top: 1px solid var(--border-color); background-color: #fff; display: none; }
+</style>
 </head>
 <body>
 
@@ -44,7 +106,229 @@
 <div id="model-version-popup" class="popup-menu"><div>Model: <strong>V1.0 Pro</strong></div></div>
 <div id="context-menu" class="popup-menu"></div>
 
-<script src="server.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const chatContainer = document.getElementById('chat-container');
+    const promptInput = document.getElementById('prompt-input');
+    const sendButton = document.getElementById('send-button');
+    const newChatBtn = document.getElementById('new-chat-btn');
+    const chatHistoryList = document.getElementById('chat-history-list');
+    const deleteHistoryBtn = document.getElementById('delete-history-btn');
+    const deepThinkBtn = document.getElementById('deep-think-mode-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const contextMenu = document.getElementById('context-menu');
+    const settingsMenu = document.getElementById('settings-menu');
+    const themeMenu = document.getElementById('theme-menu');
+    const modelPopup = document.getElementById('model-version-popup');
+    const themeMenuBtn = document.getElementById('theme-menu-btn');
+    const modelVersionBtn = document.getElementById('model-version-btn');
+    const WORKER_URL = "https://chatbotapisafer.mozostudiooffical.workers.dev/";
+    let allChats = JSON.parse(localStorage.getItem('mozo_chats') || '[]');
+    let currentChatId = localStorage.getItem('mozo_current') || null;
+    let isGenerating = false;
+    let isDeepThinkMode = false;
+
+    function saveState() { localStorage.setItem('mozo_chats', JSON.stringify(allChats)); localStorage.setItem('mozo_current', currentChatId); }
+    function getActiveChat() { return allChats.find(c => c.id === currentChatId); }
+    
+    // --- THEME LOGIC ---
+    function applyTheme(theme) {
+        const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        localStorage.setItem('mozo_theme', theme);
+    }
+    function initTheme() {
+        const savedTheme = localStorage.getItem('mozo_theme') || 'system';
+        applyTheme(savedTheme);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme(localStorage.getItem('mozo_theme')));
+    }
+
+    // --- RENDERING ---
+    function renderSidebar() {
+        chatHistoryList.innerHTML = '';
+        allChats.forEach(chat => {
+            const card = document.createElement('div');
+            card.className = 'chat-history-card';
+            if (chat.id === currentChatId) card.classList.add('active');
+            card.dataset.chatId = chat.id;
+            const title = document.createElement('span');
+            title.textContent = chat.title || 'Chat';
+            title.style.whiteSpace = 'nowrap'; title.style.overflow = 'hidden'; title.style.textOverflow = 'ellipsis';
+            card.appendChild(title);
+            const optionsBtn = document.createElement('button');
+            optionsBtn.className = 'chat-options-btn';
+            optionsBtn.innerHTML = '&#x22EE;';
+            optionsBtn.onclick = (e) => { e.stopPropagation(); showContextMenu(optionsBtn, chat.id); };
+            card.appendChild(optionsBtn);
+            card.onclick = () => { currentChatId = chat.id; renderChat(); };
+            chatHistoryList.appendChild(card);
+        });
+    }
+
+    function renderChat() {
+        chatContainer.innerHTML = '';
+        const chat = getActiveChat();
+        if (!chat) return;
+        chat.messages.forEach(m => {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `message ${m.role === 'user' ? 'user-message' : 'ai-message'}`;
+            appendMessageContent(messageWrapper, m.content);
+            chatContainer.appendChild(messageWrapper);
+        });
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        renderSidebar();
+        saveState();
+    }
+    
+    function appendMessageContent(container, content) {
+        const codeBlockRegex = /(```(\w*)\n([\s\S]*?)\n```)/g;
+        let lastIndex = 0, match;
+        while ((match = codeBlockRegex.exec(content)) !== null) {
+            if (match.index > lastIndex) container.appendChild(document.createTextNode(content.substring(lastIndex, match.index)));
+            container.appendChild(createCodeBlockElement(match[2] || 'text', match[3]));
+            lastIndex = codeBlockRegex.lastIndex;
+        }
+        if (lastIndex < content.length) container.appendChild(document.createTextNode(content.substring(lastIndex)));
+    }
+
+    function createCodeBlockElement(language, code) {
+        const block = document.createElement('div'); block.className = 'code-block';
+        const header = document.createElement('div'); header.className = 'code-header';
+        const langSpan = document.createElement('span'); langSpan.className = 'code-header-lang'; langSpan.textContent = language;
+        const buttonsDiv = document.createElement('div'); buttonsDiv.className = 'code-header-buttons';
+        const codeContent = document.createElement('div'); codeContent.className = 'code-content';
+        const previewFrame = document.createElement('iframe'); previewFrame.className = 'code-preview-iframe';
+        if (language.toLowerCase() === 'html') {
+            const previewBtn = document.createElement('button'); previewBtn.textContent = 'Preview';
+            previewBtn.onclick = () => {
+                const isHidden = previewFrame.style.display === 'none';
+                if(isHidden) previewFrame.srcdoc = code;
+                previewFrame.style.display = isHidden ? 'block' : 'none';
+                previewBtn.textContent = isHidden ? 'Close Preview' : 'Preview';
+            };
+            buttonsDiv.appendChild(previewBtn);
+        }
+        const downloadBtn = document.createElement('button'); downloadBtn.textContent = 'Download';
+        downloadBtn.onclick = () => {
+            const ext = {html:'html',javascript:'js',css:'css',python:'py'}[language.toLowerCase()]||'txt';
+            const blob = new Blob([code],{type:'text/plain'}); const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = `code.${ext}`; a.click(); URL.revokeObjectURL(a.href);
+        };
+        buttonsDiv.appendChild(downloadBtn);
+        const copyBtn = document.createElement('button'); copyBtn.textContent = 'Copy';
+        copyBtn.onclick = e => navigator.clipboard.writeText(code).then(() => { e.target.textContent = 'Copied!'; setTimeout(() => e.target.textContent = 'Copy', 2000); });
+        buttonsDiv.appendChild(copyBtn);
+        const collapseBtn = document.createElement('button'); collapseBtn.textContent = 'Collapse';
+        collapseBtn.onclick = () => {
+            const isCollapsed = codeContent.style.display === 'none'; codeContent.style.display = isCollapsed ? 'block' : 'none';
+            collapseBtn.textContent = isCollapsed ? 'Collapse' : 'Expand';
+            if (!isCollapsed) {
+                previewFrame.style.display = 'none';
+                const pBtn = buttonsDiv.querySelector('button');
+                if (pBtn && pBtn.textContent === 'Close Preview') pBtn.textContent = 'Preview';
+            }
+        };
+        buttonsDiv.appendChild(collapseBtn);
+        header.append(langSpan, buttonsDiv);
+        const pre = document.createElement('pre'); const codeEl = document.createElement('code');
+        codeEl.textContent = code; pre.appendChild(codeEl); codeContent.appendChild(pre);
+        block.append(header, codeContent, previewFrame);
+        return block;
+    }
+    
+    // --- MENU LOGIC ---
+    function hideAllPopups() { [contextMenu, settingsMenu, themeMenu, modelPopup].forEach(m => m.style.display = 'none'); }
+    
+    function showPopup(popup, anchor, position = 'up') {
+        hideAllPopups();
+        const rect = anchor.getBoundingClientRect();
+        popup.style.display = 'block';
+        if (position === 'up') {
+            popup.style.left = `${rect.left}px`;
+            popup.style.bottom = `${window.innerHeight - rect.top}px`;
+        } else if (position === 'side') {
+            popup.style.left = `${rect.right + 5}px`;
+            popup.style.top = `${rect.top}px`;
+            popup.style.bottom = 'auto';
+        } else { // 'down' for context menu
+            popup.style.left = `${rect.left}px`;
+            popup.style.top = `${rect.bottom}px`;
+            popup.style.bottom = 'auto';
+        }
+    }
+
+    function showContextMenu(anchorElement, chatId) {
+        contextMenu.innerHTML = '';
+        const actions = {'Rename Chat': () => renameChat(chatId), 'Copy Chat': () => copyChat(chatId), 'Delete Chat': () => deleteChat(chatId) };
+        for(const [label, action] of Object.entries(actions)) {
+            const btn = document.createElement('button'); btn.textContent = label; btn.onclick = action; contextMenu.appendChild(btn);
+        }
+        showPopup(contextMenu, anchorElement, 'down');
+    }
+
+    function renameChat(chatId) { const newTitle = prompt("Enter new chat name:"); if (newTitle?.trim()) { const chat = allChats.find(c => c.id === chatId); if (chat) { chat.title = newTitle.trim(); saveState(); renderSidebar(); } } }
+    function copyChat(chatId) { const chat = allChats.find(c => c.id === chatId); if (chat) navigator.clipboard.writeText(chat.messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')).then(() => alert('Chat copied!')); }
+    function deleteChat(chatId) { if (!confirm('Delete this chat?')) return; allChats = allChats.filter(c => c.id !== chatId); if (currentChatId === chatId) { currentChatId = allChats[0]?.id || null; if (!currentChatId) newChat(); else renderChat(); } else { saveState(); renderSidebar(); } }
+
+    // --- CHAT LOGIC ---
+    function newChat() { const id = Date.now().toString(); currentChatId = id; allChats.unshift({ id, title: 'New Chat', messages: [] }); renderChat(); }
+    function showThinkingMessage() { const msg = document.createElement('div'); msg.id = 'thinking-msg'; msg.className = 'thinking-message'; msg.textContent = 'Mozo is thinking...'; chatContainer.appendChild(msg); chatContainer.scrollTop = chatContainer.scrollHeight; }
+    function removeThinkingMessage() { document.getElementById('thinking-msg')?.remove(); }
+
+    async function sendMessage() {
+        if (isGenerating) return;
+        const text = promptInput.value.trim();
+        if (!text) return;
+        let chat = getActiveChat();
+        if (!chat || (chat.title === 'New Chat' && chat.messages.length === 0)) {
+           if (!chat) { newChat(); chat = getActiveChat(); }
+           chat.title = text.substring(0, 40) + (text.length > 40 ? '...' : '');
+        }
+        promptInput.value = '';
+        chat.messages.push({ role: 'user', content: text });
+        renderChat();
+        isGenerating = true;
+        showThinkingMessage();
+        try {
+            const payload = { messages: [...chat.messages] };
+            if (isDeepThinkMode) payload.messages[payload.messages.length - 1].content += " in detail";
+            const res = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await res.json();
+            const aiContent = (data.choices?.[0]?.message?.content) ? data.choices[0].message.content.replace(/OpenAI|GPT/gi, "Mozo AI") : 'Error: ' + (data.error || 'Unknown error');
+            chat.messages.push({ role: 'assistant', content: aiContent });
+        } catch (e) {
+            chat.messages.push({ role: 'assistant', content: 'Error: ' + e.message });
+        } finally {
+            isGenerating = false;
+            removeThinkingMessage();
+            renderChat();
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    document.addEventListener('click', hideAllPopups);
+    [contextMenu, settingsMenu, themeMenu, modelPopup].forEach(m => m.addEventListener('click', e => e.stopPropagation()));
+    settingsBtn.addEventListener('click', e => { e.stopPropagation(); showPopup(settingsMenu, settingsBtn, 'up'); });
+    themeMenuBtn.addEventListener('click', e => { e.stopPropagation(); showPopup(themeMenu, themeMenuBtn, 'side'); });
+    modelVersionBtn.addEventListener('click', e => { e.stopPropagation(); showPopup(modelPopup, modelVersionBtn, 'side'); });
+    themeMenu.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+    sendButton.onclick = sendMessage;
+    promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+    newChatBtn.onclick = newChat;
+    deleteHistoryBtn.onclick = () => { if (confirm('Delete all chat history?')) { allChats = []; currentChatId = null; saveState(); renderChat(); newChat(); } };
+    deepThinkBtn.onclick = () => {
+        isDeepThinkMode = !isDeepThinkMode;
+        deepThinkBtn.classList.add('deep-think-animation');
+        deepThinkBtn.textContent = `🧠Deep Think Mode : ${isDeepThinkMode ? "ON" : "OFF"}`;
+        deepThinkBtn.style.backgroundColor = isDeepThinkMode ? 'var(--accent-color-hover)' : 'var(--accent-color)';
+        deepThinkBtn.addEventListener('animationend', () => deepThinkBtn.classList.remove('deep-think-animation'), { once: true });
+    };
+
+    // --- INITIAL LOAD ---
+    initTheme();
+    if (!currentChatId || !getActiveChat()) newChat(); else renderChat();
+});
+</script>
 
 </body>
 </html>
