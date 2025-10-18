@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Mozo AI Studio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app-wrapper">
+    <aside id="sidebar">
+        <header><h1><strong>Mozo</strong> AI Studio</h1></header>
+        <button class="new-chat-button" id="new-chat-btn">New Chat</button>
+        <div id="chat-history-list" style="list-style:none;padding:0;margin:0;flex-grow:1;overflow-y:auto;"></div>
+        <div id="sidebar-footer">
+            <button class="settings-btn" id="settings-btn">Settings</button>
+            <button class="delete-history-button" id="delete-history-btn">Delete All History</button>
+        </div>
+    </aside>
+
+    <div id="content-wrapper">
+        <main id="chat-container"><!-- Messages will be injected here --></main>
+        <footer>
+            <div id="footer-top"><button id="deep-think-mode-btn">🧠Deep Think Mode : OFF</button></div>
+            <div id="prompt-wrapper">
+                <input id="prompt-input" placeholder="Chat with Mozo AI..." />
+                <div class="footer-buttons"><button id="send-button">Send</button></div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<!-- Pop-up Menus (hidden by default) -->
+<div id="settings-menu" class="popup-menu">
+    <button id="theme-menu-btn">Theme</button>
+    <button id="model-version-btn">Model Version</button>
+</div>
+<div id="theme-menu" class="popup-menu">
+    <button data-theme="light">Light</button>
+    <button data-theme="dark">Dark</button>
+    <button data-theme="system">System</button>
+</div>
+<div id="model-version-popup" class="popup-menu"><div>Model: <strong>V1.0 Pro</strong></div></div>
+<div id="context-menu" class="popup-menu"></div>
+
+<script src="server.js"></script>
+
+</body>
+</html>
